@@ -1,8 +1,10 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
-import Login from "../views/Login.vue"; // Tu nuevo componente de login
-import EstudiantesList from "../views/EstudiantesList.vue"; // Tu nuevo componente de lista de estudiantes
-import EstudianteDetail from "../views/EstudianteDetail.vue"; // ¡Importa el nuevo componente!
+import Login from "../views/Login.vue";
+import EstudiantesList from "../views/EstudiantesList.vue";
+import EstudianteDetail from "../views/EstudianteDetail.vue";
+import EstudianteForm from "../views/EstudianteForm.vue"; // Usamos el formulario genérico
 
 const routes = [
   {
@@ -19,13 +21,29 @@ const routes = [
     path: "/estudiantes",
     name: "EstudiantesList",
     component: EstudiantesList,
-    meta: { requiresAuth: true }, // Marca esta ruta como protegida
+    meta: { requiresAuth: true },
   },
+  // Ruta para CREAR un nuevo estudiante
   {
-    path: "/estudiantes/detail/:estudianteUrl*", // <-- ¡Cambio clave aquí!
+    path: "/estudiantes/nuevo",
+    name: "EstudianteCreate",
+    component: EstudianteForm, // Reutilizamos el formulario
+    meta: { requiresAuth: true },
+  },
+  // Ruta para VER los detalles de un estudiante
+  {
+    path: "/estudiantes/detail/:estudianteUrl*",
     name: "EstudianteDetail",
     component: EstudianteDetail,
-    props: true, // Esto pasa el ':id' como una prop al componente EstudianteDetail
+    props: true,
+    meta: { requiresAuth: true },
+  },
+  // Ruta para EDITAR un estudiante existente
+  {
+    path: "/estudiantes/editar/:estudianteUrl*",
+    name: "EstudianteEdit",
+    component: EstudianteForm, // Reutilizamos el formulario
+    props: true,
     meta: { requiresAuth: true },
   },
 ];
@@ -35,10 +53,9 @@ const router = createRouter({
   routes,
 });
 
-// Guarda de navegación para rutas protegidas
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !localStorage.getItem("authToken")) {
-    next("/login"); // Redirige al login si no está autenticado
+    next("/login");
   } else {
     next();
   }

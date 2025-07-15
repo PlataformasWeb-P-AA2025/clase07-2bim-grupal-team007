@@ -1,3 +1,4 @@
+<!-- src/views/EstudiantesList.vue -->
 <template>
   <div class="estudiantes-list-container">
     <h2>Listado de Estudiantes</h2>
@@ -9,19 +10,26 @@
         :key="estudiante.url"
         class="estudiante-item"
       >
-        <router-link
-          :to="{
-            name: 'EstudianteDetail',
-            params: { estudianteUrl: estudiante.url },
-          }"
-        >
-          {{ estudiante.nombre }} {{ estudiante.apellido }} (Cédula:
-          {{ estudiante.cedula }})
-        </router-link>
+        <div class="item-content">
+          <router-link
+            :to="{
+              name: 'EstudianteDetail',
+              params: { estudianteUrl: estudiante.url },
+            }"
+          >
+            {{ estudiante.nombre }} {{ estudiante.apellido }} (Cédula:
+            {{ estudiante.cedula }})
+          </router-link>
+
+          <button @click="deleteEstudiante(estudiante)" class="delete-button">
+            Eliminar
+          </button>
+        </div>
       </li>
     </ul>
     <p v-else>No hay estudiantes registrados.</p>
-    <router-link to="/estudiantes/nuevo" class="add-button"
+    <!-- Este botón debería llevar a un formulario de CREACIÓN -->
+    <router-link :to="{ name: 'EstudianteCreate' }" class="add-button"
       >Agregar Nuevo Estudiante</router-link
     >
   </div>
@@ -49,16 +57,31 @@ export default {
         this.error = null;
         const response = await api.get("estudiantes/");
         this.estudiantes = response.data.results || response.data;
-        console.log("Estudiantes cargados:", this.estudiantes);
       } catch (err) {
         console.error("Error al cargar estudiantes:", err.response || err);
-        this.error =
-          "No se pudieron cargar los estudiantes. Asegúrate de estar logueado.";
+        this.error = "No se pudieron cargar los estudiantes.";
       } finally {
         this.loading = false;
       }
     },
-    // Ya no necesitamos getEstudianteId() si pasamos la URL completa
+    async deleteEstudiante(estudiante) {
+      if (
+        window.confirm(
+          `¿Estás seguro de que deseas eliminar a ${estudiante.nombre} ${estudiante.apellido}?`
+        )
+      ) {
+        try {
+          await api.delete(estudiante.url);
+          // Actualizar la lista para reflejar el cambio
+          this.estudiantes = this.estudiantes.filter(
+            (e) => e.url !== estudiante.url
+          );
+        } catch (err) {
+          console.error("Error al eliminar estudiante:", err.response || err);
+          this.error = "No se pudo eliminar el estudiante.";
+        }
+      }
+    },
   },
 };
 </script>
@@ -73,37 +96,42 @@ export default {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   background-color: #fff;
 }
-
 h2 {
   text-align: center;
-  color: #333;
   margin-bottom: 20px;
 }
-
 ul {
   list-style: none;
   padding: 0;
 }
-
 .estudiante-item {
   padding: 10px 0;
   border-bottom: 1px solid #eee;
 }
-
-.estudiante-item:last-child {
-  border-bottom: none;
+.item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-
 .estudiante-item a {
   text-decoration: none;
   color: #007bff;
   font-weight: bold;
 }
-
 .estudiante-item a:hover {
   text-decoration: underline;
 }
-
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.delete-button:hover {
+  background-color: #c82333;
+}
 .add-button {
   display: block;
   width: fit-content;
@@ -113,17 +141,9 @@ ul {
   color: white;
   border-radius: 5px;
   text-decoration: none;
-  text-align: center;
-  transition: background-color 0.3s ease;
 }
-
-.add-button:hover {
-  background-color: #218838;
-}
-
 .error-message {
   color: red;
   text-align: center;
-  margin-top: 10px;
 }
 </style>
